@@ -1,0 +1,18 @@
+html {
+    background-color: white;
+}
+
+body {
+    background-color: grey;
+    text-align: center;
+    margin-left: 50px;
+    margin-right: 50px;
+}
+#page-wrap{
+    width: 800px;
+    
+}
+
+#item{
+    text-align: left;
+}

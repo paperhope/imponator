@@ -1,0 +1,17 @@
+<!doctype html>
+<title>Imponator list</title>
+<head>
+<link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+<body>
+<div id="page-wrap">
+{% for stuff in list_of_stuff %}
+
+<h2>{{ stuff["When"] }}</h2>
+<div id="item">
+<p>Who: {{ stuff["Who"] }}</p>
+<p>What: {{ stuff["What"] }}</p>
+<p>Why: {{ stuff["Why"] }}</p>
+</div>
+{% endfor %}
+</div></body></html>
