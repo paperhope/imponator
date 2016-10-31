@@ -1,16 +1,24 @@
+import os
 import sqlite3
 import datetime
-from flask import Flask, render_template, send_from_directory, request
+from flask import Flask, render_template, send_from_directory, request, g
 
 app = Flask(__name__)
+app.config.from_object(__name__)
+
+# Load default config and override config from an environment variable
+app.config.update(dict(
+        DATABASE=os.path.join(app.root_path, 'imponator.db'),
+    ))
+app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
 stuffdone_columns = ("Who", "What", "Why")
-database = "imponator.db"
-
+    
 @app.route("/", methods=["GET"])
 def imponator_list():
     impressive_list = _get_list(10)
     return render_template("list.html", list_of_stuff = impressive_list)
+
 
 @app.route("/item", methods=["POST"])
 def imponator_item():
@@ -22,59 +30,57 @@ def imponator_item():
         print(e)
         return "Blurgh!"
 
+    
 @app.route("/css/<path:path>")
 def css(path):
     return send_from_directory("css", path)
 
-
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(app.config["DATABASE"])
+        db.row_factory = sqlite3.Row
+        
+    return db
+    
 def _save_item(jcontent):
-    conn = sqlite3.connect(database)
-    cur = conn.cursor()
 
+    if set(stuffdone_columns) != set(jcontent.keys()):
+        raise Exception
+    
     row = [None] * len(stuffdone_columns)
     for idx, val in enumerate(stuffdone_columns):
-        
-        if val in jcontent:
-            row[idx] = jcontent[val]
-        else:
-            raise Exception
+        row[idx] = jcontent[val]
 
-    cur.execute("INSERT INTO stuffdone(Who,What,Why)  VALUES(?,?,?)", row)
-    conn.commit()
-    conn.close()
+    db = get_db()
+    db.cursor().execute("INSERT INTO stuffdone(Who,What,Why)  VALUES(?,?,?)", row)
+    db.commit()
+
     
 def _prepare_list(rows):
 
+    print(rows)
     result = []
     for row in rows:
-        result.append({
-            "Who": row[0],
-            "What": row[1],
-            "Why": row[2],
-            "When": _timestamp_to_str(row[3]),
-            "Timestamp": row[3]
-        })
+        print(row.keys())
+        tmp = { k: row[k] for k in stuffdone_columns}
+        tmp["When"] = _timestamp_to_str(row["Timestamp"])
 
-    result.sort(key=lambda x: x["Timestamp"], reverse=True)
+        result.append(tmp)
+        
+    result.sort(key=lambda x: x["When"], reverse=True)
 
     return result
 
 def _timestamp_to_str(timestamp):
-        dt = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
-        return dt.strftime("%B %d, %Y") 
+    dt = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+    return dt.strftime("%B %d, %Y") 
             
 def _get_list(max_items):
-    conn = sqlite3.connect(database)
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM stuffdone LIMIT 10")
+    c = get_db().cursor()
+    c.execute("SELECT * FROM stuffdone LIMIT 10")#, (max_items,))
 
-    return _prepare_list(cur.fetchall())
-
-
-def _post_item(item):
-    conn = conn.sqlite3.connect(database)
-    cur  = conn.cursor()
-    cur.execute()
+    return _prepare_list(c.fetchall())
     
 if __name__ == "__main__":
     app.run()
