@@ -4,14 +4,13 @@
 <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 <body>
-<div id="page-wrap">
+<h1>Its Alive!</h1>
+<div id="list2">
+<ul>
 {% for stuff in list_of_stuff %}
-
-<h2>{{ stuff["When"] }}</h2>
-<div id="item">
-<p>Who: {{ stuff["Who"] }}</p>
-<p>What: {{ stuff["What"] }}</p>
-<p>Why: {{ stuff["Why"] }}</p>
-</div>
+<li><p><em>{{ stuff["When"] }}</em>
+Who: {{ stuff["Who"] }}<br>
+What: {{ stuff["What"] }}<br>
+Why: {{ stuff["Why"] }}</p></li>
 {% endfor %}
-</div></body></html>
+</ul></div></body></html>
